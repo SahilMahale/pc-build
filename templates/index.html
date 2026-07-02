@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PC component prices</title>
+<script src="/static/htmx.min.js"></script>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 15px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif;
+         max-width: 860px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-size: 1.4rem; display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap; }
+  h1 small { font-weight: normal; opacity: .6; font-size: .85rem; }
+  h2 { font-size: 1.05rem; margin: 2rem 0 .3rem; }
+  h2 .target { font-weight: normal; opacity: .65; font-size: .85rem; margin-left: .6rem; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: .45rem .8rem .45rem 0; border-bottom: 1px solid rgba(128,128,128,.25); }
+  th { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; opacity: .6; }
+  td.num { font-variant-numeric: tabular-nums; }
+  .hit { color: #14894e; font-weight: 600; }
+  .down { color: #14894e; } .up { color: #c0392b; }
+  .muted { opacity: .55; font-size: .85rem; }
+  svg { vertical-align: middle; opacity: .8; }
+  a { color: inherit; }
+  button { font: inherit; padding: .35rem .9rem; border-radius: 6px; cursor: pointer;
+           border: 1px solid rgba(128,128,128,.4); background: transparent; color: inherit; }
+  button:hover { border-color: rgba(128,128,128,.8); }
+  button[disabled] { opacity: .5; cursor: default; }
+  .statusline { margin-left: auto; font-size: .85rem; opacity: .65; }
+  .total { margin: 1.2rem 0 0; padding: .6rem .9rem; border: 1px solid rgba(128,128,128,.3);
+           border-radius: 8px; display: flex; gap: .6rem; align-items: baseline; flex-wrap: wrap; }
+  .total strong { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+  .qty { font-weight: normal; opacity: .8; font-size: .9rem; }
+  .htmx-request .spin { display: inline-block; }
+  .progress-bar { position: relative; height: 28px; background: rgba(128,128,128,.15);
+                  border-radius: 6px; margin: 1rem 0; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #14894e, #1aa362);
+                   transition: width .3s ease; }
+  .progress-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+                   font-size: .85rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+  
+  @media (max-width: 640px) {
+    body { padding: 0 .75rem; margin: 1rem auto; font-size: 14px; }
+    h1 { font-size: 1.2rem; margin-bottom: .5rem; }
+    h2 { font-size: 1rem; margin: 1.5rem 0 .25rem; }
+    h2 .target, h2 .qty { display: block; margin-left: 0; margin-top: .25rem; }
+    table { font-size: .9rem; }
+    th, td { padding: .35rem .5rem .35rem 0; }
+    th { font-size: .7rem; }
+    th:nth-child(3), td:nth-child(3) { display: none; }
+    th:nth-child(4), td:nth-child(4) { display: none; }
+    button { padding: .3rem .7rem; font-size: .9rem; }
+    .statusline { font-size: .75rem; margin-left: 0; margin-top: .5rem; width: 100%; 
+                  display: block; text-align: center; }
+    div[style*="display:flex"] { flex-direction: column; align-items: stretch !important; }
+    .total { padding: .5rem .7rem; font-size: .9rem; }
+    .total strong { font-size: 1.05rem; }
+    .progress-bar { height: 24px; }
+    .progress-text { font-size: .75rem; }
+    .timestamp { display: none; }
+  }
+</style>
+</head>
+<body>
+<h1>PC component prices</h1>
+{{template "prices.html" .}}
+<script>
+function formatTimestamps() {
+  document.querySelectorAll('.timestamp[data-time]').forEach(el => {
+    const utc = new Date(el.dataset.time.replace(' ', 'T') + 'Z');
+    el.textContent = ' (' + utc.toLocaleString() + ')';
+  });
+}
+formatTimestamps();
+document.body.addEventListener('htmx:afterSwap', formatTimestamps);
+</script>
+</body>
+</html>

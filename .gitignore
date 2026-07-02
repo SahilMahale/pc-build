@@ -4,14 +4,17 @@
 # Claude Code local (per-machine) settings
 .claude/settings.local.json
 
-# Python
+# Python (removed)
 __pycache__/
 *.pyc
 .venv/
 
-# Scraper output
+# Database
 prices.db
-report.html
+*.db-shm
+*.db-wal
 
-# Go build artifact
-app/pc-price-server
+# Go build artifacts
+pc-price-server
+internal/
+app/

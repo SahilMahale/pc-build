@@ -1,4 +1,4 @@
-module github.com/sahilm/pc-build/app
+module github.com/sahilm/pc-build
 
 go 1.26.1
 

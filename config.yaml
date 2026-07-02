@@ -78,8 +78,9 @@ products:
         attribute: "content"
 
   # Buying 2× of this single stick for 32GB dual-channel (SKU CMK16GX5M1E6000Z36)
-  - name: "Corsair Vengeance 16GB DDR5-6000 CL36 (per stick, need 2)"
-    target_price: 5750  # = ₹11,500 for the pair; well below current market
+  - name: "Corsair Vengeance 16GB DDR5-6000 CL36"
+    quantity: 2         # per-stick price; the build needs a pair
+    target_price: 5750  # per stick = ₹11,500 for the pair; well below current market
     sources:
       - site: "vedant"
         url: "https://www.vedantcomputers.com/corsair-vengeance-16gbx1-6000mhz-cmk16gx5m1e6000z36"

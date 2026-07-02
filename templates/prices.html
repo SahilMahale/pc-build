@@ -1,0 +1,54 @@
+<div id="prices" hx-get="/prices" hx-trigger="every 2s" hx-swap="outerHTML">
+  <div style="display:flex; align-items:center; gap:1rem;">
+    <button hx-post="/scrape" hx-target="#prices" hx-swap="outerHTML" {{if .Scraping}}disabled{{end}}>
+      {{if .Scraping}}Scraping…{{else}}Scrape now{{end}}
+    </button>
+    <span class="statusline">
+      {{if .Scraping}}pass in progress{{else if .LastPass}}last pass {{.LastPass}} ({{.LastPassAgo}}){{end}}
+      {{if not .Scraping}} · auto-scrapes every {{.Interval}}{{end}}
+    </span>
+  </div>
+
+  {{if .Scraping}}
+  <div class="progress-bar">
+    <div class="progress-fill" style="width: {{if gt .ProgTotal 0}}{{printf "%.0f" (mul (div (float64 .ProgDone) (float64 .ProgTotal)) 100.0)}}{{else}}0{{end}}%"></div>
+    <span class="progress-text">{{.ProgDone}}/{{.ProgTotal}}</span>
+  </div>
+  {{end}}
+
+  {{if gt .TotalHave 0}}
+  <p class="total">Estimated optimised total: <strong>₹{{inr0 .Total}}</strong>
+    <span class="muted">cheapest listed site per component, quantities included{{if lt .TotalHave .TotalAll}} · {{.TotalHave}}/{{.TotalAll}} components priced{{end}}{{if .LastPass}} · as of {{.LastPass}}{{end}}</span>
+  </p>
+  {{end}}
+
+  {{range .Products}}
+  <h2>{{.Name}}{{if gt .Target 0.0}}<span class="target">target ₹{{inr0 .Target}}</span>{{end}}</h2>
+  <p class="muted">all-time low ₹{{inr .AllTimeLow}}</p>
+  <table>
+    <tr><th>Site</th><th>Price</th><th>Δ last pass</th><th>Trend</th><th>Scraped</th></tr>
+    {{$product := .Name}}
+    {{range .Rows}}
+    <tr>
+      <td><a href="{{.URL}}" target="_blank" rel="noreferrer">{{.Site}}</a></td>
+      <td class="num{{if .HitTarget}} hit{{end}}">₹{{inr .Price}}</td>
+      <td class="num">
+        {{if .HasDelta}}
+          {{if lt .Delta 0.0}}<span class="down">▼ ₹{{inr0 (abs .Delta)}}</span>
+          {{else}}<span class="up">▲ ₹{{inr0 .Delta}}</span>{{end}}
+        {{else}}<span class="muted">—</span>{{end}}
+      </td>
+      <td>{{.Trend}}</td>
+      <td class="muted">
+        <a href="/history/{{$product}}">
+          <span class="ago">{{.ScrapedAgo}}</span>
+          <span class="timestamp" data-time="{{.ScrapedAt}}">{{.ScrapedAt}}</span>
+        </a>
+      </td>
+    </tr>
+    {{end}}
+  </table>
+  {{else}}
+  <p style="margin-top:2rem;">No data yet — the first scrape pass is running; this panel refreshes itself.</p>
+  {{end}}
+</div>

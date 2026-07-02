@@ -1,0 +1,11 @@
+# Example config - mount your real config.yaml at runtime
+settings:
+  interval: "6h"
+  delay_between_requests: [3, 8]
+  timeout: 20
+  database: "/data/prices.db"
+  listen: "0.0.0.0:8090"
+  alert_webhook: ""
+  user_agents: []
+
+products: []
