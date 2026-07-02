@@ -12,3 +12,6 @@ __pycache__/
 # Scraper output
 prices.db
 report.html
+
+# Go build artifact
+app/pc-price-server

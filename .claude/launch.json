@@ -6,6 +6,12 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "8642"],
       "port": 8642
+    },
+    {
+      "name": "go-app",
+      "runtimeExecutable": "./app/pc-price-server",
+      "runtimeArgs": [],
+      "port": 8090
     }
   ]
 }

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Product}} — price history</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 15px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif;
+         max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-size: 1.2rem; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: .4rem .8rem .4rem 0; border-bottom: 1px solid rgba(128,128,128,.25); }
+  th { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; opacity: .6; }
+  td.num { font-variant-numeric: tabular-nums; }
+  a { color: inherit; opacity: .7; }
+</style>
+</head>
+<body>
+<p><a href="/">← back</a></p>
+<h1>{{.Product}} — price history</h1>
+{{if .Rows}}
+<table>
+  <tr><th>Scraped</th><th>Site</th><th>Price</th></tr>
+  {{range .Rows}}
+  <tr><td class="num">{{.ScrapedAt}}</td><td>{{.Site}}</td><td class="num">₹{{inr .Price}}</td></tr>
+  {{end}}
+</table>
+{{else}}
+<p>No history for this product yet.</p>
+{{end}}
+</body>
+</html>

@@ -14,8 +14,11 @@ settings:
   # Where price history is stored
   database: "prices.db"
 
-  # HTML report written at the end of every scrape pass
+  # HTML report written at the end of every scrape pass (Python v1 only)
   html_report: "report.html"
+
+  # Address the Go web app serves on (Go v2 only)
+  listen: ":8090"
 
   # Rotate through these user agents
   user_agents:

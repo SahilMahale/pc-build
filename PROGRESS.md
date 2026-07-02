@@ -91,12 +91,21 @@ config.yaml ──> scraper.py ──> prices.db (SQLite)
 | Lian Li Vector V100 White | ₹8,190 | vedant |
 | Corsair RM750e ATX 3.1 | ₹9,400 | vedant |
 
-## v2 (Go) plan
+## v2 (Go) — built 02 Jul 2026
 
-- Single service: scrape loop (same behavior as v1) + HTTP server.
-- Stack: Fiber v2, HTMX (server-rendered fragments), goquery for selectors,
-  `modernc.org/sqlite` (pure Go, easy cross-compile to the Fedora box),
-  `yaml.v3` for the same `config.yaml`.
-- Reuses `prices.db` — no migration needed.
-- Dashboard at `/`, auto-refreshing price fragment, scrape-now button,
-  per-product history.
+Single service in [app/](app/): scrape loop (same behavior as v1) + HTTP
+server. Verified end-to-end — a full 20-source pass produced prices
+identical to v1's.
+
+- Stack: Fiber v2, HTMX (server-rendered fragments, vendored
+  `static/htmx.min.js`), goquery for selectors, `modernc.org/sqlite`
+  (pure Go — cross-compiles to the Fedora box with plain `GOOS=linux
+  GOARCH=amd64 go build`), `yaml.v3`.
+- Reuses `config.yaml` (new `listen:` setting) and `prices.db` — v1 history
+  carried over, either version can keep writing.
+- Routes: `/` dashboard, `/prices` HTMX fragment (auto-swap every 30 s),
+  `POST /scrape` scrape-now (drops concurrent passes), `/history/:product`.
+- Engine parity with v1: hot-reload config each pass, first pass on launch,
+  3–8 s polite delays, UA rotation, retry w/ backoff+jitter on
+  408/425/429/5xx honouring Retry-After, webhook alerts on target hit.
+- v1 (`scraper.py`) kept as the lightweight CLI alternative.
