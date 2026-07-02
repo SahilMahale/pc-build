@@ -63,7 +63,7 @@ HOST=0.0.0.0 PORT=8090 ./pc-price-server
 
 ### Deployment
 
-Systemd user service (Fedora):
+#### Local (systemd)
 
 ```ini
 # ~/.config/systemd/user/pc-price-server.service
@@ -83,6 +83,45 @@ WantedBy=default.target
 systemctl --user enable --now pc-price-server
 systemctl --user status pc-price-server
 ```
+
+#### Docker/Podman
+
+See [DOCKER.md](DOCKER.md) or use the Makefile:
+
+```bash
+make build run      # Build and run container
+make logs           # View logs
+make stats          # Monitor resource usage
+make stop           # Stop and remove container
+```
+
+#### IBM Cloud Code Engine
+
+```bash
+# Prerequisites: IBM Cloud CLI + Code Engine plugin
+ibmcloud plugin install code-engine
+ibmcloud login
+
+# Build and push image to Docker Hub (or use IBM Container Registry)
+make build
+make push-dockerhub
+
+# Deploy (creates project, configmap, and app with persistent config)
+make deploy-ibm
+
+# Get public URL
+make ibm-url
+
+# View logs
+make ibm-logs
+
+# Clean up
+make ibm-delete
+```
+
+**Cost:** ~$0.65/month (0.25 vCPU, 0.5GB RAM, 1 instance 24/7)
+
+**Note:** SQLite requires `--min-scale 1 --max-scale 1` (no horizontal scaling). For multi-instance deployments, migrate to PostgreSQL.
 
 ### Adding a Product
 
