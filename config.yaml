@@ -1,0 +1,135 @@
+# ── Price Scraper Configuration ──────────────────────────────────────
+# Track PC component prices across Indian retailers.
+
+settings:
+  # How often to scrape. Formats: "30m", "6h", "1d", or plain seconds "3600"
+  interval: "6h"
+
+  # Random extra delay (seconds) between requests to the same site — be polite
+  delay_between_requests: [3, 8]
+
+  # HTTP timeout per request (seconds)
+  timeout: 20
+
+  # Where price history is stored
+  database: "prices.db"
+
+  # HTML report written at the end of every scrape pass
+  html_report: "report.html"
+
+  # Rotate through these user agents
+  user_agents:
+    - "Mozilla/5.0 (X11; Linux x86_64; rv:127.0) Gecko/20100101 Firefox/127.0"
+    - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+
+  # Optional: POST a JSON alert here when a target price is hit.
+  # Works with ntfy.sh, Discord webhooks, Slack, etc. Leave empty to disable.
+  alert_webhook: ""
+
+# ── Products ─────────────────────────────────────────────────────────
+# Each product entry:
+#   name:         your label for it
+#   target_price: (optional) alert when price drops to/below this
+#   sources:      one or more listings to check
+#     url:        the product page
+#     selector:   CSS selector for the element containing the price
+#     attribute:  (optional) read this HTML attribute instead of text
+#                 e.g. "content" for <meta itemprop="price" content="21849">
+#
+# Find selectors: open the product page → right-click the price →
+# Inspect → right-click the element → Copy → Copy selector.
+# Prefer short, stable selectors (class names) over long auto-generated paths.
+
+products:
+  - name: "Ryzen 7 9800X3D"
+    target_price: 38000
+    sources:
+      - site: "mdcomputers"
+        url: "https://mdcomputers.in/product/amd-ryzen-7-9800x3d-100-1000001084wof-desktop-processor"
+        selector: ".price .ins .amount, h2.special-price"
+      - site: "vedant"
+        url: "https://www.vedantcomputers.com/amd-ryzen-7-9800x3d-100-100001084wof"
+        selector: "div.product-price-new"
+      - site: "elitehubs"
+        url: "https://elitehubs.com/products/amd-ryzen-7-9800x3d-9th-generation-processor-4-7ghz-8-cores-16-threads"
+        selector: "meta[itemprop=price]"
+        attribute: "content"
+
+  - name: "Noctua NH-D15 chromax.black"
+    sources:
+      - site: "vedant"
+        url: "https://www.vedantcomputers.com/noctua-nh-d15-chromax-black-cpu-cooler"
+        selector: "div.product-price-new"
+
+  - name: "MSI MAG B850 Tomahawk Max WiFi"
+    sources:
+      - site: "mdcomputers"
+        url: "https://mdcomputers.in/product/msi-mag-b850-tomahawk-max-wifi-motherboard"
+        selector: ".price .ins .amount, h2.special-price"
+      - site: "vedant"
+        url: "https://www.vedantcomputers.com/msi-mag-b850-tomahawk-max-wifi"
+        selector: "div.product-price-new"
+      - site: "elitehubs"
+        url: "https://elitehubs.com/products/msi-mag-b850-tomahawk-max-wifi-ddr5-amd-motherboard"
+        selector: "meta[itemprop=price]"
+        attribute: "content"
+
+  # Buying 2× of this single stick for 32GB dual-channel (SKU CMK16GX5M1E6000Z36)
+  - name: "Corsair Vengeance 16GB DDR5-6000 CL36 (per stick, need 2)"
+    target_price: 5750  # = ₹11,500 for the pair; well below current market
+    sources:
+      - site: "vedant"
+        url: "https://www.vedantcomputers.com/corsair-vengeance-16gbx1-6000mhz-cmk16gx5m1e6000z36"
+        selector: "div.product-price-new"
+      - site: "elitehubs"
+        url: "https://elitehubs.com/products/corsair-vengeance-16gb-16gb-x-1-6000mhz-ddr5-ram-black-cl36"
+        selector: "meta[itemprop=price]"
+        attribute: "content"
+      - site: "mdcomputers"
+        url: "https://mdcomputers.in/product/corsair-ram-vengeance-16gb-cmk16gx5m1e6000z36"
+        selector: ".price .ins .amount, h2.special-price"
+
+  - name: "Adata XPG Gammix S70 Blade 1TB"
+    sources:
+      - site: "vedant"
+        url: "https://www.vedantcomputers.com/adata-xpg-gammix-s70-blade-pcie-gen4x4-m2-1tb-ssd-agammixs70b-1t-cs"
+        selector: "div.product-price-new"
+
+  - name: "ASRock RX 9070 Challenger 16GB"
+    target_price: 55000
+    sources:
+      - site: "mdcomputers"
+        url: "https://mdcomputers.in/product/asrock-challenger-graphics-card-rx9070-cl-16g"
+        selector: ".price .ins .amount, h2.special-price"
+      - site: "vedant"
+        url: "https://www.vedantcomputers.com/asrock-radeon-rx9070-cl-16g"
+        selector: "div.product-price-new"
+      - site: "elitehubs"
+        url: "https://elitehubs.com/products/asrock-radeon-rx-9070-challenger-16gb-amd-graphic-card"
+        selector: "meta[itemprop=price]"
+        attribute: "content"
+      - site: "primeabgb"
+        url: "https://www.primeabgb.com/online-price-reviews-india/asrock-rx-9070-challenger-16gb-gddr6-graphics-card-rx9070-cl-16g/"
+        selector: "p.price .woocommerce-Price-amount bdi"
+
+  - name: "Lian Li Vector V100 Mid-Tower (White)"
+    sources:
+      - site: "mdcomputers"
+        url: "https://mdcomputers.in/product/lian-li-vector-v100-mid-tower-cabinet-g99-v100rw-in"
+        selector: ".price .ins .amount, h2.special-price"
+      - site: "vedant"
+        url: "https://www.vedantcomputers.com/lianli-vector-v100-g99-v100rw-in"
+        selector: "div.product-price-new"
+
+  - name: "Corsair RM750e ATX 3.1"
+    sources:
+      - site: "mdcomputers"
+        url: "https://mdcomputers.in/product/corsair-rm750e-cybenetics-gold-modular-smps-cp-9020295-in"
+        selector: ".price .ins .amount, h2.special-price"
+      - site: "vedant"
+        url: "https://www.vedantcomputers.com/corsair-rm750e-750w-cp-9020295-in"
+        selector: "div.product-price-new"
+      - site: "elitehubs"
+        url: "https://elitehubs.com/products/corsair-rm750e-750w-80-gold-atx-3-1-fully-modular-power-supply"
+        selector: "meta[itemprop=price]"
+        attribute: "content"

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./scraper.py report)",
+      "Bash(./scraper.py history *)",
+      "mcp__Claude_Preview__preview_screenshot"
+    ]
+  }
+}
