@@ -70,6 +70,12 @@ function formatTimestamps() {
     const utc = new Date(el.dataset.time.replace(' ', 'T') + 'Z');
     el.textContent = ' (' + utc.toLocaleString() + ')';
   });
+  
+  document.querySelectorAll('.last-pass-time').forEach(el => {
+    const today = new Date().toISOString().split('T')[0];
+    const utc = new Date(today + 'T' + el.textContent + 'Z');
+    el.textContent = utc.toLocaleTimeString();
+  });
 }
 formatTimestamps();
 document.body.addEventListener('htmx:afterSwap', formatTimestamps);

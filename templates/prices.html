@@ -4,7 +4,7 @@
       {{if .Scraping}}Scraping…{{else}}Scrape now{{end}}
     </button>
     <span class="statusline">
-      {{if .Scraping}}pass in progress{{else if .LastPass}}last pass {{.LastPass}} ({{.LastPassAgo}}){{end}}
+      {{if .Scraping}}pass in progress{{else if .LastPass}}last pass <span class="last-pass-time">{{.LastPass}}</span> ({{.LastPassAgo}}){{end}}
       {{if not .Scraping}} · auto-scrapes every {{.Interval}}{{end}}
     </span>
   </div>
