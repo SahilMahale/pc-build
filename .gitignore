@@ -16,5 +16,3 @@ prices.db
 
 # Go build artifacts
 pc-price-server
-internal/
-app/
