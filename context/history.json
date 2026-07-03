@@ -1,0 +1,42 @@
+{
+  "sessions": [
+    {
+      "timestamp": "2026-07-03_00-12-14",
+      "context_file": "context/2026-07-03_00-12-14.md",
+      "session_title": "Go Price Tracker Restructure + Oracle Cloud Deployment Research",
+      "token_usage": 96260,
+      "branch": "main",
+      "key_achievements": [
+        "Restructured project: app/ → root main.go + internal/ package",
+        "Added real-time progress bar with mutex-protected progress tracking",
+        "Implemented relative timestamps + JS local timezone conversion",
+        "Built mobile-responsive CSS (hides columns on small screens)",
+        "Created Containerfile, Makefile, deployment docs",
+        "Researched Oracle Cloud Free Tier options (documented in deployment-discovery.md)",
+        "Fixed last pass timestamp to show local timezone"
+      ]
+    },
+    {
+      "timestamp": "2026-07-03_22-24-28",
+      "context_file": "context/2026-07-03_22-24-28.md",
+      "session_title": "Oracle VM Online + Deployment Runbook + Recovered Missing internal/ Package",
+      "token_usage": 135000,
+      "branch": "main",
+      "key_achievements": [
+        "Recovered internal/ Go package — gitignored as 'build artifact', never pushed; GitHub repo did not compile",
+        "Fixed VM SSH hang: manual VCN was missing 0.0.0.0/0 → Internet Gateway route",
+        "Confirmed A1.Flex ARM (aarch64) Oracle Linux 9 VM; Apple Silicon images run natively",
+        "Wrote DEPLOYMENT.md: podman quadlet + cloudflared tunnel + Cloudflare Access runbook (no NGINX needed)",
+        "Set up VM packages (EPEL, zellij binary) + dnf-automatic and Ksplice patching",
+        "Chose OCIR as registry (effectively free on PAYG); CI pipeline design pending",
+        "Earlier same conversation: verified all 20 scraper sources, Python v1 checkpoint, Go v2"
+      ]
+    }
+  ],
+  "metadata": {
+    "created": "2026-07-03",
+    "project": "pc-build",
+    "description": "PC component price tracker with Go backend, HTMX frontend, Oracle Cloud deployment",
+    "user": "Sahil Hokage-sama"
+  }
+}
