@@ -5,6 +5,10 @@ settings:
   # How often to scrape. Formats: "30m", "6h", "1d", or plain seconds "3600"
   interval: "6h"
 
+  # Minimum gap between manual "Scrape now" passes (button returns 429 during
+  # the cooldown). Scheduled passes ignore this. Same formats as interval.
+  scrape_cooldown: "10m"
+
   # Random extra delay (seconds) between requests to the same site — be polite
   delay_between_requests: [3, 8]
 

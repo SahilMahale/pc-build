@@ -1,8 +1,13 @@
-.PHONY: build run stop clean restart logs rebuild deploy-ibm
+.PHONY: build run stop clean restart logs rebuild deploy-ibm ocir-login ocir-build ocir-push ocir-release
 
 IMAGE_NAME = pc-price-server
 CONTAINER_NAME = pc-price-server
 PORT = 8090
+
+# OCIR — reads OCI_VM_REGION, OCI_OBJECT_STOREAGE_NAMESPACE, OCI_AUTHTOKEN from the environment
+OCIR_REGISTRY = $(OCI_VM_REGION).ocir.io
+OCIR_USER = $(OCI_OBJECT_STOREAGE_NAMESPACE)/Default/mahalesahil@gmail.com
+OCIR_IMAGE = $(OCIR_REGISTRY)/$(OCI_OBJECT_STOREAGE_NAMESPACE)/$(IMAGE_NAME)
 IBM_PROJECT = pc-price-tracker
 IBM_APP = pc-price-server
 
@@ -74,3 +79,18 @@ ibm-delete:
 push-dockerhub:
 	docker tag $(IMAGE_NAME) docker.io/sahilmahale/$(IMAGE_NAME):latest
 	docker push docker.io/sahilmahale/$(IMAGE_NAME):latest
+
+# OCI Container Registry — usage: make ocir-build TAG=v0.1.0
+ocir-login:
+	@test -n "$(OCI_VM_REGION)" || { echo "ERROR: OCI_VM_REGION is not set"; exit 1; }
+	@printf '%s' "$$OCI_AUTHTOKEN" | podman login $(OCIR_REGISTRY) -u "$(OCIR_USER)" --password-stdin
+
+ocir-build:
+	@test -n "$(TAG)" || { echo "ERROR: TAG is required, e.g. make ocir-build TAG=v0.1.0"; exit 1; }
+	podman build --platform linux/arm64 -t $(OCIR_IMAGE):$(TAG) .
+
+ocir-push:
+	@test -n "$(TAG)" || { echo "ERROR: TAG is required, e.g. make ocir-push TAG=v0.1.0"; exit 1; }
+	podman push $(OCIR_IMAGE):$(TAG)
+
+ocir-release: ocir-build ocir-push

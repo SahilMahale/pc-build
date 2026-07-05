@@ -1,6 +1,7 @@
 # Example config - mount your real config.yaml at runtime
 settings:
   interval: "6h"
+  scrape_cooldown: "10m"   # min gap between manual "Scrape now" passes (429 otherwise)
   delay_between_requests: [3, 8]
   timeout: 20
   database: "/data/prices.db"

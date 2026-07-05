@@ -158,6 +158,25 @@ func (s *Scraper) Progress() (done, total int) {
 	return s.progDone, s.progTotal
 }
 
+// TryRunOnce starts a pass in the background unless one is already running
+// (treated as accepted — the caller's intent is satisfied) or the previous
+// pass ended less than cooldown ago. Scheduled passes use RunOnce directly
+// and are never subject to the cooldown.
+func (s *Scraper) TryRunOnce(cooldown time.Duration) (started bool, wait time.Duration) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.running {
+		return true, 0
+	}
+	if !s.lastPass.IsZero() {
+		if w := cooldown - time.Since(s.lastPass); w > 0 {
+			return false, w
+		}
+	}
+	go s.RunOnce()
+	return true, 0
+}
+
 // RunOnce executes a single scrape pass; concurrent calls are dropped.
 func (s *Scraper) RunOnce() {
 	s.mu.Lock()

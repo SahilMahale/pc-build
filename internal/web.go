@@ -11,7 +11,19 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 )
+
+// clientIP identifies the real visitor for rate limiting. Behind the
+// Cloudflare tunnel every request arrives from loopback, so c.IP() alone
+// would put all visitors in one bucket; CF-Connecting-IP carries the real
+// address and is trustworthy here because only cloudflared can reach the app.
+func clientIP(c *fiber.Ctx) string {
+	if ip := c.Get("CF-Connecting-IP"); ip != "" {
+		return ip
+	}
+	return c.IP()
+}
 
 type Server struct {
 	app     *fiber.App
@@ -34,9 +46,20 @@ func NewServer(cfgPath string, store *Store, scraper *Scraper, exeDir string) (*
 		scraper: scraper,
 	}
 	s.app.Static("/static", filepath.Join(exeDir, "static"))
+	// 120 req/min per IP: the dashboard itself polls /prices every 2s
+	// (30 req/min), so this allows a few tabs plus interaction.
+	s.app.Use(limiter.New(limiter.Config{
+		Max:          120,
+		Expiration:   time.Minute,
+		KeyGenerator: clientIP,
+	}))
 	s.app.Get("/", s.index)
 	s.app.Get("/prices", s.prices)
-	s.app.Post("/scrape", s.scrapeNow)
+	s.app.Post("/scrape", limiter.New(limiter.Config{
+		Max:          3,
+		Expiration:   5 * time.Minute,
+		KeyGenerator: clientIP,
+	}), s.scrapeNow)
 	s.app.Get("/history/:product", s.history)
 	return s, nil
 }
@@ -72,7 +95,18 @@ func (s *Server) prices(c *fiber.Ctx) error {
 }
 
 func (s *Server) scrapeNow(c *fiber.Ctx) error {
-	go s.scraper.RunOnce()
+	cooldown := 10 * time.Minute
+	if cfg, err := LoadConfig(s.cfgPath); err == nil {
+		if d, err := ParseInterval(cfg.Settings.ScrapeCooldown); err == nil {
+			cooldown = d
+		}
+	}
+	started, wait := s.scraper.TryRunOnce(cooldown)
+	if !started {
+		c.Set("Retry-After", strconv.Itoa(int(wait.Seconds())+1))
+		return c.Status(429).SendString(fmt.Sprintf(
+			"cooling down — next manual scrape allowed in %s", wait.Round(time.Second)))
+	}
 	time.Sleep(50 * time.Millisecond) // let scraper set running flag
 	if c.Get("HX-Request") == "" {
 		return c.Redirect("/", 303)

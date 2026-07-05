@@ -32,6 +32,7 @@ type Settings struct {
 	UserAgents           []string  `yaml:"user_agents"`
 	AlertWebhook         string    `yaml:"alert_webhook"`
 	Listen               string    `yaml:"listen"`
+	ScrapeCooldown       string    `yaml:"scrape_cooldown"`
 }
 
 type Config struct {
@@ -59,6 +60,9 @@ func LoadConfig(path string) (*Config, error) {
 	}
 	if cfg.Settings.Interval == "" {
 		cfg.Settings.Interval = "6h"
+	}
+	if cfg.Settings.ScrapeCooldown == "" {
+		cfg.Settings.ScrapeCooldown = "10m"
 	}
 	if cfg.Settings.Listen == "" {
 		host := os.Getenv("HOST")

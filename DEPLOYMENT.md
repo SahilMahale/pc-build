@@ -171,6 +171,89 @@ sudo cloudflared service install        # copies config to /etc/cloudflared/
 sudo systemctl enable --now cloudflared
 ```
 
+## 5.1 How the tunnel actually works (and why no port is ever opened)
+
+Deployed 2026-07-04; this section explains the moving parts so future-you
+can debug it from first principles.
+
+### The three files in `~/.cloudflared/`
+
+| File | Created by | What it is |
+|---|---|---|
+| `cert.pem` | `cloudflared tunnel login` | **Origin certificate** — an API credential authorizing *management* of tunnels and DNS for the zone. Needed by `tunnel create`, `tunnel route dns`, `tunnel list`, and for running a tunnel **by name**. Not needed to run a tunnel by UUID. |
+| `<UUID>.json` | `cloudflared tunnel create` | The **tunnel's own secret** — this is what authenticates the running connector to the edge. Anyone with this file can serve traffic as your tunnel. |
+| `config.yml` | you, by hand | Runtime config: which tunnel to run, where its secret is, and the ingress routing table. |
+
+### config.yml, line by line
+
+```yaml
+tunnel: aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee        # WHICH tunnel to run (UUID)
+credentials-file: /home/opc/.cloudflared/<UUID>.json # its secret
+
+ingress:                                             # routing table, evaluated top-down
+  - hostname: prices.sahilmahale.com                 # SNI/Host header match
+    service: http://localhost:8090                   # forward to the app on loopback
+  - service: http_status:404                         # catch-all — REQUIRED last rule
+```
+
+- `tunnel:` must be the **UUID, exactly**. If it isn't a parseable UUID,
+  cloudflared silently falls back to treating it as a tunnel *name*, and
+  name→UUID resolution requires `cert.pem` — producing the misleading
+  `Cannot determine default origin certificate path` error. (This bit us:
+  a copy-paste dropped the final character of the UUID.)
+- `ingress:` makes cloudflared the reverse proxy. One tunnel can serve
+  many hostnames — add more `- hostname:` blocks, each pointing at a
+  different local port. The catch-all rule must exist or cloudflared
+  refuses to start.
+- The `service:` URL is plain `http://` — safe because it never leaves
+  the machine (loopback). Public TLS terminates at Cloudflare's edge.
+
+### The connection model — why no OCI ingress rule
+
+```
+                     OCI security list: port 22 only. Nothing else.
+                                        │
+Browser ──HTTPS──> Cloudflare edge ─────┼──────────X  (no inbound path exists)
+                        ▲               │
+                        │ 4 outbound QUIC connections (port 7844)
+                        │ opened BY the VM, kept alive
+                        └── cloudflared ──http──> 127.0.0.1:8090 (container)
+```
+
+1. At startup, cloudflared dials **out** from the VM to four Cloudflare
+   edge datacenters (QUIC, port 7844, falling back to HTTPS/443) and
+   authenticates with `<UUID>.json`. Outbound traffic is allowed by
+   default; the security list is never involved.
+2. The DNS record (`prices` → CNAME `<UUID>.cfargotunnel.com`, proxied)
+   tells the edge: requests for this hostname belong to that tunnel.
+3. A visitor's HTTPS request terminates at the edge; the edge multiplexes
+   it down one of the already-open tunnel connections; cloudflared matches
+   the hostname against `ingress:` and proxies to `localhost:8090`.
+4. The app container publishes to `127.0.0.1` only, so even a
+   misconfigured firewall exposes nothing — there is no interface on
+   which the app or the tunnel listens publicly. The VM has **zero**
+   inbound attack surface beyond SSH.
+
+Consequences worth remembering:
+
+- Origin IP is never in DNS; the VM cannot be found, let alone hit,
+  by scanners.
+- TLS certificates are Cloudflare's problem — no certbot, no renewals.
+- If cloudflared dies, the site 503/1033s but the VM is unreachable
+  either way — fail-closed.
+
+### Two copies of config.yml exist
+
+`sudo cloudflared service install` **copies** the config into
+`/etc/cloudflared/config.yml`; the systemd service reads *that* copy,
+not `~/.cloudflared/config.yml`. Edit both or they drift. Also note
+`sudo cloudflared service install` alone can't find a config under
+`/home/opc` (root's `~` is `/root`) — pass it explicitly:
+
+```bash
+sudo cloudflared --config /home/opc/.cloudflared/config.yml service install
+```
+
 ## 6. Cloudflare Access (login wall)
 
 The dashboard has a public **Scrape now** button — don't leave it open to
@@ -261,3 +344,7 @@ already covered on this box; no scheduled reboots needed.
 | Price history resets after redeploy | `database:` in config.yaml isn't `/data/prices.db` (§2) |
 | Container dies on boot | `loginctl enable-linger opc` not set — rootless services need linger to start without a login |
 | App works locally, Access loop / no login page | Access application domain typo'd, or you're hitting the IP directly instead of the hostname |
+| Service loops with `Cannot determine default origin certificate path` + `error parsing tunnel ID` | `tunnel:` in config.yml is not a valid UUID (truncated paste) — cloudflared falls back to name lookup, which needs cert.pem. Compare against the `<UUID>.json` filename |
+| `service install` says `Cannot determine default configuration path` | Run under sudo it looks in `/root`, not your home — `sudo cloudflared --config /home/opc/.cloudflared/config.yml service install` |
+| Fixed `~/.cloudflared/config.yml` but service still fails | The service reads `/etc/cloudflared/config.yml` — a *copy* made at install time. Edit both (§5.1) |
+| Browser shows Cloudflare **Error 1033** | Tunnel exists in DNS but no connector is running — `ps aux \| grep cloudflared`, then start/install the service; verify with `cloudflared tunnel info pc-prices` |
